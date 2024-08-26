@@ -1,120 +1,165 @@
 <template>
-    <el-table style="width: 100%; margin-bottom: 20px" row-key="id" border :data="menuParams">
-        <el-table-column label="名称" prop="name"></el-table-column>
-        <el-table-column label="权限值" prop="code"></el-table-column>
-        <el-table-column label="修改时间" prop="updateTime"></el-table-column>
-        <el-table-column label="操作">
-            <!-- row:即为已有的菜单对象|按钮的对象的数据 -->
-            <template #="{ row }">
-                <el-button v-has="`btn.Permission.add`" type="primary" @click="addMenu(row)" size="small"
-                    v-if="row.level < 4">{{ row.level == 3 ?
-                        '添加功能'
-                        :
-                        '添加菜单' }}</el-button>
-                <el-button type="primary" @click="editMenu(row)" size="small" :disabled="row.level == 1 ? true : false"
-                    v-has="`btn.Permission.update`">编辑</el-button>
-                <el-popconfirm :title="`你确定要删除${row.name}?`" width="260px" @confirm="removeMenu(row.id)">
-                    <template #reference>
-                        <el-button type="primary" size="small" v-has="`btn.Permission.remove`">删除</el-button>
-                    </template>
-                </el-popconfirm>
-            </template>
-        </el-table-column>
-    </el-table>
-    <!-- 对话框组件:添加或者更新已有的菜单的数据结构 -->
-    <el-dialog v-model="dialogVisible" :title="menuData.id ? '添加菜单' : '修改菜单'">
-        <!-- 表单组件:收集新增与已有的菜单的数据 -->
-        <el-form>
-            <el-form-item label="名称">
-                <el-input placeholder="请你输入菜单名称" v-model="menuData.name"></el-input>
-            </el-form-item>
-            <el-form-item label="权限">
-                <el-input placeholder="请你输入权限数值" v-model="menuData.pid"></el-input>
-            </el-form-item>
-        </el-form>
-        <template #footer>
-            <span class="dialog-footer">
-                <el-button @click="dialogVisible = false">取消</el-button>
-                <el-button type="primary" @click="updataMenu">确定</el-button>
-            </span>
-        </template>
-    </el-dialog>
+  <el-table
+    style="width: 100%; margin-bottom: 20px"
+    row-key="id"
+    border
+    :data="menuParams"
+  >
+    <el-table-column label="名称" prop="name"></el-table-column>
+    <el-table-column label="权限值" prop="code"></el-table-column>
+    <el-table-column label="修改时间" prop="updateTime"></el-table-column>
+    <el-table-column label="操作">
+      <!-- row:即为已有的菜单对象|按钮的对象的数据 -->
+      <template #="{ row }">
+        <el-button
+          v-has="`btn.Permission.add`"
+          type="primary"
+          @click="addMenu(row)"
+          size="small"
+          v-if="row.level < 4"
+        >
+          {{ row.level == 3 ? '添加功能' : '添加菜单' }}
+        </el-button>
+        <el-button
+          type="primary"
+          @click="editMenu(row)"
+          size="small"
+          :disabled="row.level == 1 ? true : false"
+          v-has="`btn.Permission.update`"
+        >
+          编辑
+        </el-button>
+        <el-popconfirm
+          :title="`你确定要删除${row.name}?`"
+          width="260px"
+          @confirm="removeMenu(row.id)"
+        >
+          <template #reference>
+            <el-button
+              type="primary"
+              size="small"
+              v-has="`btn.Permission.remove`"
+            >
+              删除
+            </el-button>
+          </template>
+        </el-popconfirm>
+      </template>
+    </el-table-column>
+  </el-table>
+  <!-- 对话框组件:添加或者更新已有的菜单的数据结构 -->
+  <el-dialog
+    v-model="dialogVisible"
+    :title="menuData.id ? '添加菜单' : '修改菜单'"
+  >
+    <!-- 表单组件:收集新增与已有的菜单的数据 -->
+    <el-form>
+      <el-form-item label="名称">
+        <el-input
+          placeholder="请你输入菜单名称"
+          v-model="menuData.name"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="权限">
+        <el-input
+          placeholder="请你输入权限数值"
+          v-model="menuData.pid"
+        ></el-input>
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="updataMenu">确定</el-button>
+      </span>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
-import { reqAddOrUpdateMenu, reqAllPermisstion, reqRemoveMenu } from '@/api/acl/menu';
-import { MenuParams, Permisstion, PermisstionList, PermisstionResponseData } from '@/api/acl/menu/type';
-import { ElMessage } from 'element-plus';
-import { onMounted, reactive, ref } from 'vue';
+import {
+  reqAddOrUpdateMenu,
+  reqAllPermisstion,
+  reqRemoveMenu,
+} from '@/api/acl/menu'
+import {
+  MenuParams,
+  Permisstion,
+  PermisstionList,
+  PermisstionResponseData,
+} from '@/api/acl/menu/type'
+import { ElMessage } from 'element-plus'
+import { onMounted, reactive, ref } from 'vue'
 //存储数据
 let menuParams = ref<PermisstionList>([])
 //控制对话框的显示与隐藏
-let dialogVisible = ref<boolean>(false);
+let dialogVisible = ref<boolean>(false)
 //携带的参数
 let menuData = reactive<MenuParams>({
-    "code": "",
-    "level": 0,
-    "name": "",
-    "pid": 0,
+  code: '',
+  level: 0,
+  name: '',
+  pid: 0,
 })
 onMounted(() => {
-    getHasPermiseetion()
+  getHasPermiseetion()
 })
 //渲染表格
 const getHasPermiseetion = async () => {
-    let result: PermisstionResponseData = await reqAllPermisstion()
-    if (result.code == 200) {
-        menuParams.value = result.data
-    }
+  let result: PermisstionResponseData = await reqAllPermisstion()
+  if (result.code == 200) {
+    menuParams.value = result.data
+  }
 }
 //添加按钮
 const addMenu = (row: Permisstion) => {
-    //清空数据
-    Object.assign(menuData, {
-        id: 0,
-        "code": "",
-        "level": 0,
-        "name": "",
-        "pid": 0,
-    })
-    //对话框显示出来
-    dialogVisible.value = true;
-    //收集新增的菜单的level数值
-    menuData.level = row.level + 1;
-    //给谁新增子菜单
-    menuData.pid = (row.id as number);
+  //清空数据
+  Object.assign(menuData, {
+    id: 0,
+    code: '',
+    level: 0,
+    name: '',
+    pid: 0,
+  })
+  //对话框显示出来
+  dialogVisible.value = true
+  //收集新增的菜单的level数值
+  menuData.level = row.level + 1
+  //给谁新增子菜单
+  menuData.pid = row.id as number
 }
 //保存按钮的方法回调
 const updataMenu = async () => {
-    //发请求:新增子菜单|更新某一个已有的菜单的数据
-    let result: any = await reqAddOrUpdateMenu(menuData);
-    if (result.code == 200) {
-        //对话框隐藏
-        dialogVisible.value = false;
-        //提示信息
-        ElMessage({ type: 'success', message: menuData.id ? '更新成功' : '添加成功' })
-        //再次获取全部最新的菜单的数据
-        getHasPermiseetion()
-    }
+  //发请求:新增子菜单|更新某一个已有的菜单的数据
+  let result: any = await reqAddOrUpdateMenu(menuData)
+  if (result.code == 200) {
+    //对话框隐藏
+    dialogVisible.value = false
+    //提示信息
+    ElMessage({
+      type: 'success',
+      message: menuData.id ? '更新成功' : '添加成功',
+    })
+    //再次获取全部最新的菜单的数据
+    getHasPermiseetion()
+  }
 }
 //编辑按钮的回调
 const editMenu = (row: MenuParams) => {
-    dialogVisible.value = true;
-    //点击修改按钮:收集已有的菜单的数据进行更新
-    Object.assign(menuData, row);
+  dialogVisible.value = true
+  //点击修改按钮:收集已有的菜单的数据进行更新
+  Object.assign(menuData, row)
 }
 
 //删除按钮回调
 const removeMenu = async (id: number) => {
-    let result = await reqRemoveMenu(id);
-    if (result.code == 200) {
-        ElMessage({ type: 'success', message: '删除成功' });
-        getHasPermiseetion()
-    }
-    console.log(result);
+  let result = await reqRemoveMenu(id)
+  if (result.code == 200) {
+    ElMessage({ type: 'success', message: '删除成功' })
+    getHasPermiseetion()
+  }
+  console.log(result)
 }
-
-
 </script>
 
 <style scoped></style>
